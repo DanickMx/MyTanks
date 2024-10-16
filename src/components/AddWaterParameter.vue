@@ -20,7 +20,7 @@
       </div>
       <div>
         <label for="mesure">Mesure:</label>
-        <input type="number" v-model="form.mesure" step="0.01" required>
+        <input type="number" v-model="form.mesure" step="0.01" min="0" required>
       </div>
       <div>
         <button type="button" @click="toggleNoteInput">Ajouter une note</button>
