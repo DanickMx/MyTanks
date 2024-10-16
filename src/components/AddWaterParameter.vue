@@ -14,10 +14,10 @@
           </option>
         </select>
       </div>
-      <div>
-        <label for="mesure">Mesure:</label>
-        <input type="number" v-model="form.mesure" required>
-      </div>
+		<div>
+		  <label for="mesure">Mesure:</label>
+		  <input type="number" v-model="form.mesure" step="0.01" required>
+		</div>
       <div>
         <label for="noteMesure">Note Mesure:</label>
         <input type="text" v-model="form.noteMesure">
