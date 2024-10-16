@@ -20,7 +20,7 @@
       </div>
       <div>
         <label for="noteMesure">Note Mesure:</label>
-        <input type="text" v-model="form.noteMesure" required>
+        <input type="text" v-model="form.noteMesure">
       </div>
       <div>
         <label for="id_aquarium">ID Aquarium:</label>
@@ -62,7 +62,11 @@ export default {
     async submitForm() {
       try {
         const formattedDate = new Date(this.form.dateMesure).toISOString().split('.')[0];
-        const payload = { ...this.form, dateMesure: formattedDate };
+        const payload = {
+          ...this.form,
+          dateMesure: formattedDate,
+          noteMesure: this.form.noteMesure || '' // Définit une chaîne vide si `noteMesure` est null ou undefined
+        };
         const response = await fetch('http://127.0.0.1:5000/add_waterparameter', {
           method: 'POST',
           headers: {
