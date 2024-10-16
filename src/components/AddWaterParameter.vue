@@ -3,8 +3,12 @@
     <h2>Add Water Parameter</h2>
     <form @submit.prevent="submitForm">
       <div>
-        <label for="id_aquarium">ID Aquarium:</label>
-        <input type="number" v-model="form.id_aquarium" required>
+        <label for="id_aquarium">Select Aquarium:</label>
+        <select v-model="form.id_aquarium" required>
+          <option v-for="aquarium in aquariums" :value="aquarium.id" :key="aquarium.id">
+            {{ aquarium.nom }}
+          </option>
+        </select>
       </div>
       <div>
         <label for="idparameters">Parameter:</label>
@@ -14,13 +18,15 @@
           </option>
         </select>
       </div>
-		<div>
-		  <label for="mesure">Mesure:</label>
-		  <input type="number" v-model="form.mesure" step="0.01" required>
-		</div>
       <div>
-        <label for="noteMesure">Note Mesure:</label>
-        <input type="text" v-model="form.noteMesure">
+        <label for="mesure">Mesure:</label>
+        <input type="number" v-model="form.mesure" step="0.01" required>
+      </div>
+      <div>
+        <button type="button" @click="toggleNoteInput">Ajouter une note</button>
+      </div>
+      <div v-if="showNoteInput">
+        <textarea v-model="form.noteMesure" rows="3"></textarea>
       </div>
       <div>
         <label for="useCurrentDate">Date et heure actuelle:</label>
@@ -35,7 +41,6 @@
   </div>
 </template>
 
-
 <script>
 export default {
   name: 'AddWaterParameter',
@@ -49,11 +54,14 @@ export default {
         id_aquarium: ''
       },
       parameters: [],
-      useCurrentDate: true
+      aquariums: [],
+      useCurrentDate: true,
+      showNoteInput: false // Variable pour contrôler l'affichage du champ note
     };
   },
   created() {
     this.fetchParameters();
+    this.fetchAquariums();
   },
   methods: {
     async fetchParameters() {
@@ -64,6 +72,18 @@ export default {
       } catch (error) {
         console.error('Error fetching parameters:', error);
       }
+    },
+    async fetchAquariums() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/aquariums');
+        const data = await response.json();
+        this.aquariums = data;
+      } catch (error) {
+        console.error('Error fetching aquariums:', error);
+      }
+    },
+    toggleNoteInput() {
+      this.showNoteInput = !this.showNoteInput;
     },
     async submitForm() {
       try {
