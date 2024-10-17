@@ -6,7 +6,7 @@
         <label for="id_aquarium">Select Aquarium:</label>
         <select v-model="form.id_aquarium" required>
           <option v-for="aquarium in aquariums" :value="aquarium.id" :key="aquarium.id">
-            {{ aquarium.nom }}
+            {{ aquarium.nom_aquarium }}
           </option>
         </select>
       </div>
@@ -78,6 +78,7 @@ export default {
         const response = await fetch('http://127.0.0.1:5000/aquariums');
         const data = await response.json();
         this.aquariums = data;
+        console.log(this.aquariums); // Vérifie les données récupérées
       } catch (error) {
         console.error('Error fetching aquariums:', error);
       }
@@ -114,34 +115,6 @@ export default {
   }
 };
 </script>
-
-
-<style scoped>
-form {
-  display: flex;
-  flex-direction: column;
-  max-width: 400px;
-  margin: 0 auto;
-}
-div {
-  margin-bottom: 1em;
-}
-label {
-  margin-bottom: 0.5em;
-}
-input, select {
-  padding: 0.5em;
-  font-size: 1em;
-}
-button {
-  padding: 0.5em 1em;
-  background-color: #009879;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-</style>
-
 
 
 <style scoped>
