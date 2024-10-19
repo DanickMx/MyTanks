@@ -3,30 +3,24 @@
     <h2>Add Water Parameter</h2>
     <form @submit.prevent="submitForm">
       <div>
-        <label for="id_aquarium">Select Aquarium:</label>
-        <select v-model="form.id_aquarium" required>
-          <option v-for="aquarium in aquariums" :value="aquarium.id" :key="aquarium.id">
-            {{ aquarium.nom }}
+        <label for="aquarium_id">Select Aquarium:</label>
+        <select v-model="form.aquarium_id" required>
+          <option v-for="aquarium in aquariums" :value="aquarium.AQUARIUM_ID" :key="aquarium.AQUARIUM_ID">
+            {{ aquarium.AQUARIUM_NAME }}
           </option>
         </select>
       </div>
       <div>
-        <label for="idparameters">Parameter:</label>
-        <select v-model="form.idparameters" required>
-          <option v-for="param in parameters" :value="param.IDPARAMETERS" :key="param.IDPARAMETERS">
-            {{ param.DESCRIPTION }}
+        <label for="parameters_id">Parameter:</label>
+        <select v-model="form.parameters_id" required>
+          <option v-for="param in parameters" :value="param.PARAMETER_ID" :key="param.PARAMETER_ID">
+            {{ param.PARAMETER_NAME }}
           </option>
         </select>
       </div>
       <div>
         <label for="mesure">Mesure:</label>
         <input type="number" v-model="form.mesure" step="0.01" min="0" required>
-      </div>
-      <div>
-        <button type="button" @click="toggleNoteInput">Ajouter une note</button>
-      </div>
-      <div v-if="showNoteInput">
-        <textarea v-model="form.noteMesure" rows="3"></textarea>
       </div>
       <div>
         <label for="useCurrentDate">Date et heure actuelle:</label>
@@ -47,16 +41,14 @@ export default {
   data() {
     return {
       form: {
-        idparameters: '',
+        parameters_id: '',
         mesure: '',
         dateMesure: new Date().toISOString().slice(0, 16),
-        noteMesure: '',
-        id_aquarium: ''
+        aquarium_id: ''
       },
       parameters: [],
       aquariums: [],
-      useCurrentDate: true,
-      showNoteInput: false // Variable pour contrôler l'affichage du champ note
+      useCurrentDate: true
     };
   },
   created() {
@@ -78,12 +70,10 @@ export default {
         const response = await fetch('http://127.0.0.1:5000/aquariums');
         const data = await response.json();
         this.aquariums = data;
+        console.log(this.aquariums); // Vérifie les données récupérées
       } catch (error) {
         console.error('Error fetching aquariums:', error);
       }
-    },
-    toggleNoteInput() {
-      this.showNoteInput = !this.showNoteInput;
     },
     async submitForm() {
       try {
@@ -93,9 +83,9 @@ export default {
         }
         const payload = {
           ...this.form,
-          dateMesure: formattedDate,
-          noteMesure: this.form.noteMesure || ''
+          dateMesure: formattedDate
         };
+        console.log("Payload:", payload); // Vérifie les données envoyées
         const response = await fetch('http://127.0.0.1:5000/add_waterparameter', {
           method: 'POST',
           headers: {
@@ -114,35 +104,6 @@ export default {
   }
 };
 </script>
-
-
-<style scoped>
-form {
-  display: flex;
-  flex-direction: column;
-  max-width: 400px;
-  margin: 0 auto;
-}
-div {
-  margin-bottom: 1em;
-}
-label {
-  margin-bottom: 0.5em;
-}
-input, select {
-  padding: 0.5em;
-  font-size: 1em;
-}
-button {
-  padding: 0.5em 1em;
-  background-color: #009879;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-</style>
-
-
 
 <style scoped>
 form {

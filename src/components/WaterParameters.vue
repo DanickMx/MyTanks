@@ -1,12 +1,16 @@
 <template>
-  <div>
+  <div class="water-parameters-table">
     <h2>Water Parameters</h2>
     <ag-grid-vue
       style="width: 100%; height: 500px;"
       class="ag-theme-alpine"
       :columnDefs="columnDefs"
-      :rowData="waterParameters">
+      :rowData="waterParameters"
+      :defaultColDef="{ sortable: true, filter: true, resizable: true }"
+      pagination
+      :paginationPageSize="10">
     </ag-grid-vue>
+    <p v-if="error">{{ error }}</p>
   </div>
 </template>
 
@@ -14,7 +18,7 @@
 import { AgGridVue } from 'ag-grid-vue3';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-
+import '@fortawesome/fontawesome-free/css/all.css';
 
 export default {
   name: 'WaterParameters',
@@ -25,13 +29,12 @@ export default {
     return {
       waterParameters: [],
       columnDefs: [
-        { headerName: 'ID', field: 'ID' },
-        { headerName: 'ID_AQUARIUM', field: 'ID_AQUARIUM' },
-        { headerName: 'DESCRIPTION', field: 'DESCRIPTION' },
-        { headerName: 'MESURE', field: 'MESURE' },
-        { headerName: 'DATEMESURE', field: 'DATEMESURE' },
-        { headerName: 'NOTEMESURE', field: 'NOTEMESURE' }
-      ]
+        { headerName: 'Aquarium', field: 'aquarium_display' },
+        { headerName: 'Paramètres', field: 'PARAMETER_NAME' },
+        { headerName: 'Mesure', field: 'MESURE' },
+        { headerName: 'Date Mesure', field: 'DATEMESURE' }
+      ],
+      error: null
     };
   },
   created() {
@@ -41,10 +44,18 @@ export default {
     async fetchWaterParameters() {
       try {
         const response = await fetch('http://127.0.0.1:5000/waterparameters');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
         const data = await response.json();
-        this.waterParameters = data;
+        this.waterParameters = data.map(param => ({
+          ...param,
+          aquarium_display: `${param.AQUARIUM_ID} - ${param.AQUARIUM_NAME}`
+        }));
+        console.log(this.waterParameters); // Vérifie les données récupérées
       } catch (error) {
         console.error('Error fetching water parameters:', error);
+        this.error = 'Error fetching water parameters: ' + error.message;
       }
     }
   }
@@ -52,10 +63,12 @@ export default {
 </script>
 
 <style scoped>
+.water-parameters-table {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
 .ag-theme-alpine {
-  width: 100%;
-  height: 500px;
-  margin: 20px 0; /* Add some spacing around the grid */
+  margin-top: 20px;
 }
 </style>
-
