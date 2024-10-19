@@ -1,3 +1,68 @@
+<template>
+  <div class="homepage-container">
+    <div class="homepage">
+      <h1>Projet MyTanks App</h1>
+      <nav>
+        <ul>
+          <li><router-link to="/waterparameters">Water Parameters</router-link></li>
+          <li><router-link to="/products-and-dosing">Products and Dosing</router-link></li>
+        </ul>
+      </nav>
+      <section class="full-width">
+        <h2>Your Aquariums</h2>
+        <div class="aquarium-grid">
+          <div v-for="aquarium in aquariums" :key="aquarium.AQUARIUM_ID" class="aquarium-tile">
+            <router-link :to="`/aquarium/${aquarium.AQUARIUM_ID}`">{{ aquarium.AQUARIUM_NAME }}</router-link>
+          </div>
+        </div>
+      </section>
+      <div class="half-width-container">
+        <section class="half-width">
+          <h3>Recent Dosages</h3>
+          <ul class="dosage-list">
+            <li>Dosage 1</li>
+            <li>Dosage 2</li>
+          </ul>
+        </section>
+        <section class="half-width">
+          <h3>Products</h3>
+          <ul class="products-list">
+            <li>Product 1</li>
+            <li>Product 2</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'HomePage', // Nom du composant multi-mots
+  data() {
+    return {
+      aquariums: []
+    };
+  },
+  async created() {
+    await this.fetchAquariums();
+  },
+  methods: {
+    async fetchAquariums() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/aquariums');
+        const data = await response.json();
+        this.aquariums = data;
+        console.log(this.aquariums); // Vérifie les données récupérées
+      } catch (error) {
+        console.error('Error fetching aquariums:', error);
+      }
+    }
+  }
+};
+</script>
+
+<style scoped>
 body {
   background-color: #000000; /* Fond noir */
   color: #E0E0E0; /* Texte blanc doux */
@@ -136,7 +201,7 @@ section h2 {
 }
 
 section h3 {
-  font-size: 1.2em; /* Taille réduite des titres "Recent Dosages*/
+  font-size: 1.2em; /* Taille réduite des titres "Recent Dosages" et "Products" */
 }
 
 ul {
@@ -162,3 +227,4 @@ li a {
   text-decoration: none;
   display: block;
 }
+</style>
