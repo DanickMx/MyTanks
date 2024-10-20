@@ -3,28 +3,28 @@
     <h2>Ajouter un dosage</h2>
     <form @submit.prevent="addDosing" class="form-container">
       <div class="form-group">
-        <label>Aquarium ID:</label>
-        <select v-model="aquarium_id" required class="input-text">
+        <label for="aquarium_id" class="form-label">Aquarium:</label>
+        <select v-model="aquarium_id" required class="input-text" id="aquarium_id">
           <option v-for="aquarium in aquariums" :key="aquarium.AQUARIUM_ID" :value="aquarium.AQUARIUM_ID">{{ aquarium.AQUARIUM_NAME }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Product ID:</label>
-        <select v-model="product_id" required class="input-text">
+        <label for="product_id" class="form-label">Product:</label>
+        <select v-model="product_id" required class="input-text" id="product_id">
           <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">{{ product.PRODUCT_NAME }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Dosage Amount:</label>
-        <input v-model="dosage_amount" required class="input-text">
+        <label for="dosage_amount" class="form-label">Quantité:</label>
+        <input v-model="dosage_amount" required class="input-text" id="dosage_amount">
       </div>
       <div class="form-group">
-        <label for="useCurrentDate">Date et heure actuelle:</label>
-        <input type="checkbox" v-model="useCurrentDate" checked>
+        <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
+        <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
       </div>
       <div class="form-group" v-if="!useCurrentDate">
-        <label for="dosage_date">Dosage Date:</label>
-        <input v-model="dosage_date" type="datetime-local" required class="input-text">
+        <label for="dosage_date" class="form-label">Dosage Date:</label>
+        <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date">
       </div>
       <button type="submit" class="add-button">Ajouter</button>
     </form>
@@ -127,13 +127,20 @@ export default {
 
 .form-group {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   width: 400px;
   margin: auto;
+  justify-content: space-between; /* Espace entre label et input */
 }
 
-/* Champs de texte */
+label {
+  flex: 1;
+  margin-right: 1em; /* Espace entre label et input */
+  text-align: left; /* Alignement du texte à gauche */
+}
+
 .input-text, textarea, select {
+  flex: 2;
   padding: 1em; /* Augmente la hauteur des champs */
   font-size: 1em !important; /* Assure une taille de police cohérente */
   background-color: #FFFFFF; /* Blanc opaque */
