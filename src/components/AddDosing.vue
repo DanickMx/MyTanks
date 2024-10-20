@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <h2>Ajouter un dosage</h2>
     <form @submit.prevent="addDosing">
       <div>
@@ -53,3 +53,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.container {
+  background-color: #000000; /* Assurer que le fond est noir */
+  color: #E0E0E0;
+}
+</style>
