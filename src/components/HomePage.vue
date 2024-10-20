@@ -6,7 +6,7 @@
         <ul>
           <li><router-link to="/waterparameters" class="button">Water Parameters</router-link></li>
           <li><router-link to="/dosing" class="button">Dosing</router-link></li>
-          <li><router-link to="/items" class="button">Items</router-link></li>
+          <li><router-link to="/items" class="button">Admin Items</router-link></li>
         </ul>
       </nav>
       <section class="full-width">

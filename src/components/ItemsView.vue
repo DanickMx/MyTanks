@@ -3,7 +3,7 @@
     <div class="nav">
       <router-link to="/" class="home-link">Retour à la page d'accueil</router-link>
     </div>
-    <h2>Items</h2>
+    <h2>Admin Items</h2>
     <div class="add-sections">
       <AddProduct class="form-section"/>
     </div>
