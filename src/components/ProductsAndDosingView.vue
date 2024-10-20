@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+     <div class="nav">
+      <router-link to="/" class="home-link">Retour à la page d'accueil</router-link>
+	 </div>
     <h2>Products and Dosing</h2>
     <div class="add-sections">
 	  <AddDosing class="form-section"/>

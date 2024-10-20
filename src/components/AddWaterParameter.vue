@@ -43,7 +43,7 @@ export default {
       form: {
         parameters_id: '',
         mesure: '',
-        dateMesure: new Date().toISOString().slice(0, 16),
+        dateMesure: '',
         aquarium_id: ''
       },
       parameters: [],
@@ -54,6 +54,7 @@ export default {
   created() {
     this.fetchParameters();
     this.fetchAquariums();
+    this.setCurrentDateTime(); // Initialise la date et l'heure actuelles
   },
   methods: {
     async fetchParameters() {
@@ -74,6 +75,11 @@ export default {
       } catch (error) {
         console.error('Error fetching aquariums:', error);
       }
+    },
+    setCurrentDateTime() {
+      const now = new Date();
+      const localDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      this.form.dateMesure = localDateTime;
     },
     async submitForm() {
       try {
@@ -101,9 +107,18 @@ export default {
         console.error('Error adding water parameter:', error);
       }
     }
+  },
+  watch: {
+    useCurrentDate(newValue) {
+      if (newValue) {
+        this.setCurrentDateTime();
+      }
+    }
   }
 };
 </script>
+
+
 
 <style scoped>
 form {

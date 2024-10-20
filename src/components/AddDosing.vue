@@ -4,18 +4,26 @@
     <form @submit.prevent="addDosing" class="form-container">
       <div class="form-group">
         <label>Aquarium ID:</label>
-        <input v-model="aquarium_id" required class="input-text">
+        <select v-model="aquarium_id" required class="input-text">
+          <option v-for="aquarium in aquariums" :key="aquarium.AQUARIUM_ID" :value="aquarium.AQUARIUM_ID">{{ aquarium.AQUARIUM_NAME }}</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Product ID:</label>
-        <input v-model="product_id" required class="input-text">
+        <select v-model="product_id" required class="input-text">
+          <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">{{ product.PRODUCT_NAME }}</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Dosage Amount:</label>
         <input v-model="dosage_amount" required class="input-text">
       </div>
       <div class="form-group">
-        <label>Dosage Date:</label>
+        <label for="useCurrentDate">Date et heure actuelle:</label>
+        <input type="checkbox" v-model="useCurrentDate" checked>
+      </div>
+      <div class="form-group" v-if="!useCurrentDate">
+        <label for="dosage_date">Dosage Date:</label>
         <input v-model="dosage_date" type="datetime-local" required class="input-text">
       </div>
       <button type="submit" class="add-button">Ajouter</button>
@@ -30,29 +38,74 @@ export default {
       aquarium_id: '',
       product_id: '',
       dosage_amount: '',
-      dosage_date: ''
+      dosage_date: '',
+      aquariums: [],
+      products: [],
+      useCurrentDate: true
     }
   },
+  async created() {
+    await this.fetchAquariums();
+    await this.fetchProducts();
+    this.setCurrentDateTime(); // Initialise la date et l'heure actuelles
+  },
   methods: {
+    async fetchAquariums() {
+      try {
+        const response = await fetch('http://localhost:5000/aquariums');
+        const data = await response.json();
+        this.aquariums = data;
+      } catch (error) {
+        console.error('Error fetching aquariums:', error);
+      }
+    },
+    async fetchProducts() {
+      try {
+        const response = await fetch('http://localhost:5000/products');
+        const data = await response.json();
+        this.products = data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    },
+    setCurrentDateTime() {
+      const now = new Date();
+      const tzOffset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+      const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
+      this.dosage_date = localISOTime;
+    },
     async addDosing() {
+      let formattedDate = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('.')[0];
+      if (!this.useCurrentDate) {
+        formattedDate = new Date(this.dosage_date).toISOString().split('.')[0];
+      }
+      const payload = {
+        aquarium_id: this.aquarium_id,
+        product_id: this.product_id,
+        dosage_amount: this.dosage_amount,
+        dosage_date: formattedDate
+      };
       const response = await fetch('http://localhost:5000/add_dosing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          aquarium_id: this.aquarium_id,
-          product_id: this.product_id,
-          dosage_amount: this.dosage_amount,
-          dosage_date: this.dosage_date
-        })
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
       alert(result.message);
     }
+  },
+  watch: {
+    useCurrentDate(newValue) {
+      if (newValue) {
+        this.setCurrentDateTime();
+      }
+    }
   }
 }
 </script>
+
 
 <style scoped>
 .container {
