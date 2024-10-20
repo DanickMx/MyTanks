@@ -151,7 +151,7 @@ body {
 }
 
 /* En-têtes des sections */
-section h2, section h3 {
+h1, section h2, section h3 {
   color: #FFFFFF;
   font-weight: 300;
   border-bottom: 2px solid #87CEFA;
