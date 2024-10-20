@@ -5,7 +5,8 @@
       <nav>
         <ul>
           <li><router-link to="/waterparameters" class="button">Water Parameters</router-link></li>
-          <li><router-link to="/products-and-dosing" class="button">Products and Dosing</router-link></li>
+          <li><router-link to="/dosing" class="button">Dosing</router-link></li>
+          <li><router-link to="/items" class="button">Items</router-link></li>
         </ul>
       </nav>
       <section class="full-width">
@@ -16,24 +17,9 @@
           </div>
         </div>
       </section>
-      <div class="half-width-container">
-        <section class="half-width">
-          <h3>Recent Dosages</h3>
-          <ul class="dosage-list">
-            <li><span class="button">Dosage 1</span></li>
-            <li><span class="button">Dosage 2</span></li>
-          </ul>
-        </section>
-        <section class="half-width">
-          <h3>Products</h3>
-          <ul class="products-list">
-            <li><span class="button">Product 1</span></li>
-            <li><span class="button">Product 2</span></li>
-          </ul>
-        </section>
-      </div>
     </div>
   </div>
+
 </template>
 
 <script>

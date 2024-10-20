@@ -1,11 +1,10 @@
 <template>
   <div class="container">
-     <div class="nav">
+    <div class="nav">
       <router-link to="/" class="home-link">Retour à la page d'accueil</router-link>
-	 </div>
-    <h2>Products and Dosing</h2>
+    </div>
+    <h2>Items</h2>
     <div class="add-sections">
-	  <AddDosing class="form-section"/>
       <AddProduct class="form-section"/>
     </div>
   </div>
@@ -13,13 +12,11 @@
 
 <script>
 import AddProduct from './AddProduct.vue';
-import AddDosing from './AddDosing.vue';
 
 export default {
-  name: 'ProductsAndDosingView',
+  name: 'ItemsView',
   components: {
-    AddProduct,
-    AddDosing
+    AddProduct
   }
 }
 </script>

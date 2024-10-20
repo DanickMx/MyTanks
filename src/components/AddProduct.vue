@@ -3,7 +3,7 @@
     <h2>Ajouter un produit</h2>
     <form @submit.prevent="addProduct" class="form-container">
       <div class="form-group">
-        <label>Nom du produit:</label>
+        <label>Product Name:</label>
         <input v-model="product_name" required class="input-text">
       </div>
       <div class="form-group">
@@ -65,7 +65,7 @@ export default {
 
 <style scoped>
 .container {
-  background-color: #000000; 
+  background-color: #000000;
   color: #E0E0E0;
   padding: 1em;
   display: flex;
@@ -83,13 +83,20 @@ export default {
 
 .form-group {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   width: 400px;
   margin: auto;
+  justify-content: space-between; /* Espace entre label et input */
 }
 
-/* Champs de texte */
-.input-text, .input-textarea, select {
+label {
+  flex: 1;
+  margin-right: 1em; /* Espace entre label et input */
+  text-align: left; /* Alignement du texte à gauche */
+}
+
+.input-text, textarea, select {
+  flex: 2;
   padding: 1em; /* Augmente la hauteur des champs */
   font-size: 1em !important; /* Assure une taille de police cohérente */
   background-color: #FFFFFF; /* Blanc opaque */
@@ -117,10 +124,5 @@ h2 {
 
 .add-button:hover {
   background-color: #4682B4; /* Couleur au survol */
-}
-
-textarea {
-  resize: vertical; /* Permet à l'utilisateur de redimensionner verticalement */
-  min-height: 100px; /* Hauteur minimum pour le textarea */
 }
 </style>
