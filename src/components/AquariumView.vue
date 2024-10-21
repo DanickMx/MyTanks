@@ -5,10 +5,10 @@
     </div>
     <div class="aquarium-view">
       <h1>{{ aquariumName }}</h1>
-  
+
       <!-- Section pour les derniers paramètres d'eau -->
       <section class="section">
-        <h2>Derniers Paramètres d'Eau</h2>
+        <h2>Water Parameters</h2>
         <div class="parameter-tiles">
           <div v-for="measurement in latestMeasurements" :key="measurement.PARAMETER_ID" class="parameter-tile">
             <p>{{ measurement.PARAMETER_NAME }} {{ measurement.MESURE }}</p>
@@ -16,32 +16,47 @@
           </div>
         </div>
         <ul>
-          <li v-for="parameter in recentWaterParameters" :key="parameter.WATERPARAMETER_ID">
-            {{ parameter.PARAMETER_NAME }}
-            <span style="margin-left: 1em;">{{ parameter.MESURE }} - {{ parameter.DATEMESURE }}</span>
+          <li v-for="parameter in recentWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
+            <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
+            <span class="table-cell">{{ parameter.MESURE }}</span>
+            <span class="table-cell">{{ parameter.DATEMESURE }}</span>
           </li>
           <li v-if="hasMoreThan10Results" class="more-data">...</li>
         </ul>
         <router-link :to="`/add-waterparameter?aquarium_id=${aquariumId}`" class="add-button">Ajouter un paramètre</router-link>
       </section>
-    
+
       <!-- Section pour les paramètres d'eau pour une journée -->
       <section class="section">
-        <h2>Paramètres d'Eau pour une Journée</h2>
+        <h3>Daily Water Parameters</h3>
         <div class="date-picker-container">
           <input type="date" v-model="selectedDate" @change="filterWaterParameters" class="date-picker"/>
         </div>
         <ul v-if="filteredWaterParameters.length">
-          <li v-for="parameter in filteredWaterParameters" :key="parameter.WATERPARAMETER_ID">{{ parameter.PARAMETER_NAME }} - {{ parameter.MESURE }} - {{ parameter.DATEMESURE }}</li>
+          <li v-for="parameter in filteredWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
+            <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
+            <span class="table-cell">{{ parameter.MESURE }}</span>
+            <span class="table-cell">{{ parameter.DATEMESURE }}</span>
+          </li>
         </ul>
         <p v-else class="no-data">*** Aucune données saisies selon les critères sélectionnés.</p>
       </section>
-      
+
       <!-- Section pour les dosages -->
       <section class="section">
-        <h2>Derniers Dosages</h2>
+        <h2>Dosings</h2>
+        <div class="parameter-tiles">
+          <div v-for="dosing in latestDosages" :key="dosing.PRODUCT_NAME" class="parameter-tile">
+            <p>{{ dosing.PRODUCT_NAME }} {{ dosing.DOSAGE_AMOUNT }}</p>
+            <small class="parameter-date">{{ dosing.DOSAGE_DATE }}</small>
+          </div>
+        </div>
         <ul>
-          <li v-for="dosing in recentDosings" :key="dosing.DOSING_ID">{{ dosing.DOSAGE_AMOUNT }} - {{ dosing.DOSAGE_DATE }}</li>
+          <li v-for="dosing in recentDosings" :key="dosing.DOSING_ID" class="table-row">
+            <span class="table-cell">{{ dosing.PRODUCT_NAME }}</span>
+            <span class="table-cell">{{ dosing.DOSAGE_AMOUNT }}</span>
+            <span class="table-cell">{{ dosing.DOSAGE_DATE }}</span>
+          </li>
           <li v-if="hasMoreThan10Dosings" class="more-data">...</li>
         </ul>
         <router-link :to="`/add-dosing?aquarium_id=${aquariumId}`" class="add-button">Ajouter un dosage</router-link>
@@ -62,6 +77,7 @@ export default {
       recentWaterParameters: [],
       recentDosings: [],
       latestMeasurements: [],
+      latestDosages: [],
       selectedDate: new Date().toISOString().split('T')[0],
       aquariumId: this.$route.params.aquarium_id,
       hasMoreThan10Results: false,
@@ -108,7 +124,6 @@ export default {
       this.recentWaterParameters = this.waterParameters
         .sort((a, b) => new Date(b.DATEMESURE) - new Date(a.DATEMESURE)) // Trier par date décroissante
         .slice(0, 10); // Limiter à 10 résultats
-
       this.hasMoreThan10Results = this.waterParameters.length > 10; // Mettre à jour l'indicateur
     },
     getLatestMeasurements() {
@@ -127,11 +142,20 @@ export default {
         this.recentDosings = data
           .sort((a, b) => new Date(b.DOSAGE_DATE) - new Date(a.DOSAGE_DATE)) // Trier par date décroissante
           .slice(0, 10); // Limiter à 10 résultats
-
+        this.latestDosages = this.getLatestDosages(data);
         this.hasMoreThan10Dosings = data.length > 10; // Mettre à jour l'indicateur
       } catch (error) {
         console.error('Error fetching dosings:', error);
       }
+    },
+    getLatestDosages(dosages) {
+      const latestMap = new Map();
+      dosages.forEach(dose => {
+        if (!latestMap.has(dose.PRODUCT_NAME) || new Date(dose.DOSAGE_DATE) > new Date(latestMap.get(dose.PRODUCT_NAME).DOSAGE_DATE)) {
+          latestMap.set(dose.PRODUCT_NAME, dose);
+        }
+      });
+      return Array.from(latestMap.values());
     }
   }
 };
@@ -198,13 +222,13 @@ export default {
   font-family: 'Consolas', 'Courier New', monospace;
 }
 
-.parameter-tiles {
+.parameter-tiles, .dosage-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
 }
 
-.parameter-tile {
+.parameter-tile, .dosage-tile {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -220,12 +244,12 @@ export default {
   height: 125px;
 }
 
-.parameter-tile p {
+.parameter-tile p, .dosage-tile p {
   color: #FFFFFF;
   margin: 0 0 0.5em 0; /* Ajouter un espace en bas */
 }
 
-.parameter-tile small {
+.parameter-tile small, .dosage-tile small {
   color: #A9A9A9; /* Couleur moins en évidence */
   font-size: 0.85em;
 }
@@ -239,6 +263,19 @@ ul li::before {
   content: ">";
   color: #E0E0E0; /* Même couleur que le texte */
   margin-right: 0.5em;
+}
+
+.table-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.5em 0;
+}
+
+.table-cell {
+  flex: 1;
+  text-align: left;
+  padding: 0 1em;
 }
 
 .list-item {
