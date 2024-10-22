@@ -5,7 +5,7 @@
     </div>
     <div class="aquarium-view">
       <h1>{{ aquariumName }}</h1>
-
+      
       <!-- Section pour les derniers paramètres d'eau -->
       <section class="section">
         <h2>Water Parameters</h2>
@@ -15,6 +15,34 @@
             <small class="parameter-date">{{ measurement.DATEMESURE }}</small>
           </div>
         </div>
+        <div>
+          <button @click="showForm = !showForm" class="add-button">Ajouter un paramètre</button>
+        </div>
+        <section v-if="showForm" class="section">
+          <form @submit.prevent="submitForm">
+            <div>
+              <label for="parameters_id">Nom du paramètre :</label>
+              <select v-model="form.parameters_id" required>
+                <option v-for="param in parameters" :value="param.PARAMETER_ID" :key="param.PARAMETER_ID">
+                  {{ param.PARAMETER_NAME }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label for="mesure">Mesure :</label>
+              <input type="number" v-model="form.mesure" step="0.01" min="0" required>
+            </div>
+            <div>
+              <label for="useCurrentDate">Date et heure actuelle :</label>
+              <input type="checkbox" v-model="useCurrentDate" checked>
+            </div>
+            <div v-if="!useCurrentDate">
+              <label for="dateMesure">Date Mesure :</label>
+              <input type="datetime-local" v-model="form.dateMesure">
+            </div>
+            <button type="submit">Enregistrer</button>
+          </form>
+        </section>
         <ul>
           <li v-for="parameter in recentWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
             <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
@@ -23,9 +51,8 @@
           </li>
           <li v-if="hasMoreThan10Results" class="more-data">...</li>
         </ul>
-        <router-link :to="`/add-waterparameter?aquarium_id=${aquariumId}`" class="add-button">Ajouter un paramètre</router-link>
       </section>
-
+      
       <!-- Section pour les paramètres d'eau pour une journée -->
       <section class="section">
         <h3>Daily Water Parameters</h3>
@@ -73,11 +100,20 @@ export default {
     return {
       aquariumName: '',
       waterParameters: [],
+      parameters: [],
       filteredWaterParameters: [],
       recentWaterParameters: [],
       recentDosings: [],
       latestMeasurements: [],
       latestDosages: [],
+      form: {
+        parameters_id: '',
+        mesure: '',
+        dateMesure: '',
+        aquarium_id: this.$route.params.aquarium_id // On utilise l'ID de l'aquarium actuel
+      },
+      useCurrentDate: true,
+      showForm: false,
       selectedDate: new Date().toISOString().split('T')[0],
       aquariumId: this.$route.params.aquarium_id,
       hasMoreThan10Results: false,
@@ -88,6 +124,8 @@ export default {
     this.fetchAquariumDetails();
     this.fetchWaterParameters();
     this.fetchDosings();
+    this.fetchParameters();
+    this.setCurrentDateTime();
   },
   methods: {
     async fetchAquariumDetails() {
@@ -109,6 +147,15 @@ export default {
         this.getLatestMeasurements(); // Charger les dernières mesures
       } catch (error) {
         console.error('Error fetching water parameters:', error);
+      }
+    },
+    async fetchParameters() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/parameters');
+        const data = await response.json();
+        this.parameters = data;
+      } catch (error) {
+        console.error('Error fetching parameters:', error);
       }
     },
     filterWaterParameters() {
@@ -156,10 +203,49 @@ export default {
         }
       });
       return Array.from(latestMap.values());
+    },
+    setCurrentDateTime() {
+      const now = new Date();
+      const localDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      this.form.dateMesure = localDateTime;
+    },
+    async submitForm() {
+      try {
+        let formattedDate = new Date().toISOString().split('.')[0];
+        if (!this.useCurrentDate) {
+          formattedDate = new Date(this.form.dateMesure).toISOString().split('.')[0];
+        }
+        const payload = {
+          ...this.form,
+          dateMesure: formattedDate
+        };
+        console.log("Payload:", payload); // Vérifie les données envoyées
+        const response = await fetch('http://127.0.0.1:5000/add_waterparameter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        console.log(data);
+        alert("Water parameter added successfully!");
+        window.location.reload();
+      } catch (error) {
+        console.error('Error adding water parameter:', error);
+      }
+    }
+  },
+  watch: {
+    useCurrentDate(newValue) {
+      if (newValue) {
+        this.setCurrentDateTime();
+      }
     }
   }
 };
 </script>
+
 
 <style scoped>
 .container {
