@@ -78,20 +78,45 @@
             <small class="parameter-date">{{ dosing.DOSAGE_DATE }}</small>
           </div>
         </div>
+		
+		<button @click="showDosingForm = !showDosingForm" class="add-button">Ajouter un dosage</button>
+
+        <section v-if="showDosingForm" class="section">
+          <h3>Ajouter un dosage</h3>
+          <form @submit.prevent="addDosing" class="form-container">
+            <div class="form-group">
+              <label for="product_id" class="form-label">Produit:</label>
+              <select v-model="product_id" required class="input-text" id="product_id">
+                <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">{{ product.PRODUCT_NAME }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dosage_amount" class="form-label">Quantité:</label>
+              <input v-model="dosage_amount" required class="input-text" id="dosage_amount">
+            </div>
+            <div class="form-group">
+              <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
+              <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
+            </div>
+            <div class="form-group" v-if="!useCurrentDate">
+              <label for="dosage_date" class="form-label">Date du dosage:</label>
+              <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date">
+            </div>
+            <button type="submit" class="add-button">Ajouter</button>
+          </form>
+        </section>
         <ul>
           <li v-for="dosing in recentDosings" :key="dosing.DOSING_ID" class="table-row">
             <span class="table-cell">{{ dosing.PRODUCT_NAME }}</span>
             <span class="table-cell">{{ dosing.DOSAGE_AMOUNT }}</span>
             <span class="table-cell">{{ dosing.DOSAGE_DATE }}</span>
           </li>
-          <li v-if="hasMoreThan10Dosings" class="more-data">...</li>
         </ul>
-        <router-link :to="`/add-dosing?aquarium_id=${aquariumId}`" class="add-button">Ajouter un dosage</router-link>
+        
       </section>
     </div>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -106,6 +131,13 @@ export default {
       recentDosings: [],
       latestMeasurements: [],
       latestDosages: [],
+	  product_id: '',
+      dosage_amount: '',
+      dosage_date: '',
+      products: [],
+      useCurrentDate: true,
+      showDosingForm: false,
+      aquariumId: this.$route.params.aquarium_id,
       form: {
         parameters_id: '',
         mesure: '',
@@ -125,9 +157,48 @@ export default {
     this.fetchWaterParameters();
     this.fetchDosings();
     this.fetchParameters();
+	this.fetchProducts(); // Charger les produits pour le dosage
     this.setCurrentDateTime();
   },
   methods: {
+  
+  async fetchProducts() {
+      try {
+        const response = await fetch('http://localhost:5000/products');
+        const data = await response.json();
+        this.products = data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    },
+    async addDosing() {
+      let formattedDate = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('.')[0];
+      if (!this.useCurrentDate) {
+        formattedDate = new Date(this.dosage_date).toISOString().split('.')[0];
+      }
+      const payload = {
+        aquarium_id: this.aquariumId, // Utiliser l'ID de l'aquarium courant
+        product_id: this.product_id,
+        dosage_amount: this.dosage_amount,
+        dosage_date: formattedDate
+      };
+      try {
+        const response = await fetch('http://localhost:5000/add_dosing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        alert(result.message); // Afficher un message de succès
+        this.showDosingForm = false; // Fermer le formulaire après ajout
+        this.fetchDosings(); // Rafraîchir les dosages pour afficher le nouveau
+      } catch (error) {
+        console.error('Error adding dosing:', error);
+      }
+    },
+	
     async fetchAquariumDetails() {
       try {
         const response = await fetch(`http://localhost:5000/aquarium/${this.aquariumId}`);
