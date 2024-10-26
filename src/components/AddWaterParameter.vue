@@ -1,50 +1,58 @@
 <template>
-  <div>
-    <h2>Add Water Parameter</h2>
-    <form @submit.prevent="submitForm">
-      <div>
-        <label for="aquarium_id">Select Aquarium:</label>
-        <select v-model="form.aquarium_id" required>
-          <option v-for="aquarium in aquariums" :value="aquarium.AQUARIUM_ID" :key="aquarium.AQUARIUM_ID">
+  <section>
+    <form @submit.prevent="submitForm" class="form-container">
+<!-- Aquarium selection shown only if aquariumId is not provided -->
+      <div class="form-group" v-if="!aquariumId">
+        <label for="aquarium_id" class="form-label">Aquarium:</label>
+        <select v-model="form.aquarium_id" class="input-text" id="aquarium_id" required>
+          <option v-for="aquarium in aquariums" :key="aquarium.AQUARIUM_ID" :value="aquarium.AQUARIUM_ID">
             {{ aquarium.AQUARIUM_NAME }}
           </option>
         </select>
       </div>
-      <div>
-        <label for="parameters_id">Parameter:</label>
-        <select v-model="form.parameters_id" required>
-          <option v-for="param in parameters" :value="param.PARAMETER_ID" :key="param.PARAMETER_ID">
-            {{ param.PARAMETER_NAME }}
+      <div class="form-group">
+        <label for="parameter_id" class="form-label">Paramètre:</label>
+        <select v-model="form.parameter_id" required class="input-text" id="parameter_id">
+          <option v-for="parameter in parameters" :key="parameter.PARAMETER_ID" :value="parameter.PARAMETER_ID">
+            {{ parameter.PARAMETER_NAME }}
           </option>
         </select>
       </div>
-      <div>
-        <label for="mesure">Mesure:</label>
-        <input type="number" v-model="form.mesure" step="0.01" min="0" required>
+      <div class="form-group">
+        <label for="mesure" class="form-label">Mesure:</label>
+        <input v-model="form.mesure" required class="input-text" id="mesure" />
       </div>
-      <div>
-        <label for="useCurrentDate">Date et heure actuelle:</label>
-        <input type="checkbox" v-model="useCurrentDate" checked>
+      <div class="form-group">
+        <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
+        <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate" />
       </div>
-      <div v-if="!useCurrentDate">
-        <label for="dateMesure">Date Mesure:</label>
-        <input type="datetime-local" v-model="form.dateMesure">
+      <div class="form-group" v-if="!useCurrentDate">
+        <label for="dateMesure" class="form-label">Date de mesure:</label>
+        <input v-model="form.dateMesure" type="datetime-local" required class="input-text" id="dateMesure" />
       </div>
-      <button type="submit">Add Parameter</button>
+      <div class="form-group">
+        <button type="submit" class="full-width-button">Enregistrer</button>
+      </div>
     </form>
-  </div>
+  </section>
 </template>
 
 <script>
 export default {
   name: 'AddWaterParameter',
+  props: {
+    aquariumId: {
+      type: Number,
+      default: null
+    }
+  },
   data() {
     return {
       form: {
-        parameters_id: '',
+        parameter_id: '',
         mesure: '',
         dateMesure: '',
-        aquarium_id: ''
+        aquarium_id: this.aquariumId || ''
       },
       parameters: [],
       aquariums: [],
@@ -54,7 +62,7 @@ export default {
   created() {
     this.fetchParameters();
     this.fetchAquariums();
-    this.setCurrentDateTime(); // Initialise la date et l'heure actuelles
+    this.setCurrentDateTime();
   },
   methods: {
     async fetchParameters() {
@@ -71,7 +79,6 @@ export default {
         const response = await fetch('http://127.0.0.1:5000/aquariums');
         const data = await response.json();
         this.aquariums = data;
-        console.log(this.aquariums); // Vérifie les données récupérées
       } catch (error) {
         console.error('Error fetching aquariums:', error);
       }
@@ -83,15 +90,17 @@ export default {
     },
     async submitForm() {
       try {
-        let formattedDate = new Date().toISOString().split('.')[0];
-        if (!this.useCurrentDate) {
-          formattedDate = new Date(this.form.dateMesure).toISOString().split('.')[0];
-        }
+        let formattedDate = this.useCurrentDate
+          ? new Date().toISOString().split('.')[0]
+          : new Date(this.form.dateMesure).toISOString().split('.')[0];
+
         const payload = {
-          ...this.form,
-          dateMesure: formattedDate
+          parameter_id: this.form.parameter_id,
+          mesure: this.form.mesure,
+          dateMesure: formattedDate,
+          aquarium_id: this.form.aquarium_id
         };
-        console.log("Payload:", payload); // Vérifie les données envoyées
+
         const response = await fetch('http://127.0.0.1:5000/add_waterparameter', {
           method: 'POST',
           headers: {
@@ -99,13 +108,22 @@ export default {
           },
           body: JSON.stringify(payload)
         });
-        const data = await response.json();
-        console.log(data);
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
         alert("Water parameter added successfully!");
-        window.location.reload();
+
+        this.$emit('parameterAdded'); // Émet un événement pour signaler l'ajout
+        this.closeForm(); // Ferme le formulaire
       } catch (error) {
         console.error('Error adding water parameter:', error);
+        alert("Une erreur est survenue lors de l'ajout du paramètre d'eau. Veuillez réessayer.");
       }
+    },
+    closeForm() {
+      this.$emit('close');
     }
   },
   watch: {
@@ -119,29 +137,56 @@ export default {
 </script>
 
 
-
 <style scoped>
+/* Structure du formulaire */
 form {
   display: flex;
   flex-direction: column;
   max-width: 400px;
   margin: 0 auto;
+  padding: 1.5em;
+  border-radius: 2px;
+  color: #FFFFFF;
+
 }
+
+/* Espacement des éléments de formulaire */
 div {
   margin-bottom: 1em;
 }
+
+/* Style des labels */
 label {
   margin-bottom: 0.5em;
+  color: #FFFFFF;
 }
+
+/* Style des champs d'entrée */
 input, select {
   padding: 0.5em;
   font-size: 1em;
-}
-button {
-  padding: 0.5em 1em;
-  background-color: #009879;
+  background-color: #333;
   color: white;
-  border: none;
+  border: 1px solid #FFFFFF;
+  border-radius: 2px;
+}
+
+/* Style du bouton 'Enregistré' pour correspondre aux autres boutons */
+button {
+  display: block;
+  width: 60%;
+  background-color: black;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  padding: 1em;
   cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 1em auto; /* Ajout d'une marge de 1em en haut et en bas */
+}
+
+button:hover {
+  background-color: #1E90FF; /* Couleur au survol */
 }
 </style>
+
