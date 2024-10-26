@@ -8,41 +8,48 @@
       
       <!-- Section pour les derniers paramètres d'eau -->
       <section class="section">
-        <h2>Water Parameters</h2>
-        <div class="parameter-tiles">
-          <div v-for="measurement in latestMeasurements" :key="measurement.PARAMETER_ID" class="parameter-tile">
-            <p>{{ measurement.PARAMETER_NAME }} {{ measurement.MESURE }}</p>
-            <small class="parameter-date">{{ measurement.DATEMESURE }}</small>
-          </div>
-        </div>
-        <div>
-          <button @click="showForm = !showForm" class="add-button">Ajouter un paramètre</button>
-        </div>
-        <section v-if="showForm" class="section">
-          <form @submit.prevent="submitForm">
-            <div>
-              <label for="parameters_id">Nom du paramètre :</label>
-              <select v-model="form.parameters_id" required>
-                <option v-for="param in parameters" :value="param.PARAMETER_ID" :key="param.PARAMETER_ID">
-                  {{ param.PARAMETER_NAME }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label for="mesure">Mesure :</label>
-              <input type="number" v-model="form.mesure" step="0.01" min="0" required>
-            </div>
-            <div>
-              <label for="useCurrentDate">Date et heure actuelle :</label>
-              <input type="checkbox" v-model="useCurrentDate" checked>
-            </div>
-            <div v-if="!useCurrentDate">
-              <label for="dateMesure">Date Mesure :</label>
-              <input type="datetime-local" v-model="form.dateMesure">
-            </div>
-            <button type="submit">Enregistrer</button>
-          </form>
-        </section>
+  <h2>Water Parameters</h2>
+  <div class="parameter-tiles">
+    <div v-for="measurement in latestMeasurements" :key="measurement.PARAMETER_ID" class="parameter-tile">
+      <p>{{ measurement.PARAMETER_NAME }} {{ measurement.MESURE }}</p>
+      <small class="parameter-date">{{ measurement.DATEMESURE }}</small>
+    </div>
+  </div>
+  <div class="button-container">
+    <button @click="showForm = !showForm" class="add-button">
+  <i class="fas fa-plus"></i> Add Parameter
+</button>
+  </div>
+  <section v-if="showForm" class="section">
+  <form @submit.prevent="submitForm" class="form-container">
+    <div class="form-group">
+      <label for="parameters_id">Nom du paramètre :</label>
+      <select v-model="form.parameters_id" required>
+        <option v-for="param in parameters" :value="param.PARAMETER_ID" :key="param.PARAMETER_ID">
+          {{ param.PARAMETER_NAME }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="mesure">Mesure :</label>
+      <input type="number" v-model="form.mesure" step="0.01" min="0" required>
+    </div>
+    <div class="form-group">
+      <label for="useCurrentDate">Date et heure actuelle :</label>
+      <input type="checkbox" v-model="useCurrentDate" checked>
+    </div>
+    <div class="form-group" v-if="!useCurrentDate">
+      <label for="dateMesure">Date Mesure :</label>
+      <input type="datetime-local" v-model="form.dateMesure">
+    </div>
+    <div class="form-group">
+      <button type="submit" class="full-width-button">Enregistrer</button>
+
+    </div>
+  </form>
+</section>
+
+
         <ul>
           <li v-for="parameter in recentWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
             <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
@@ -70,41 +77,48 @@
       </section>
 
       <!-- Section pour les dosages -->
-      <section class="section">
-        <h2>Dosings</h2>
-        <div class="parameter-tiles">
-          <div v-for="dosing in latestDosages" :key="dosing.PRODUCT_NAME" class="parameter-tile">
-            <p>{{ dosing.PRODUCT_NAME }} {{ dosing.DOSAGE_AMOUNT }}</p>
-            <small class="parameter-date">{{ dosing.DOSAGE_DATE }}</small>
+<section class="section">
+          <h2>Dosings</h2>
+          <div class="parameter-tiles">
+            <div v-for="dosing in latestDosages" :key="dosing.PRODUCT_NAME" class="parameter-tile">
+              <p>{{ dosing.PRODUCT_NAME }} {{ dosing.DOSAGE_AMOUNT }}</p>
+              <small class="parameter-date">{{ dosing.DOSAGE_DATE }}</small>
+            </div>
           </div>
-        </div>
-		
-		<button @click="showDosingForm = !showDosingForm" class="add-button">Ajouter un dosage</button>
+          <div class="button-container">
+            <button @click="showDosingForm = !showDosingForm" class="add-button">
+              <i class="fas fa-plus"></i> Add Dosing
+            </button>
+          </div>
+          <section v-if="showDosingForm" class="section">
+            <form @submit.prevent="addDosing" class="form-container">
+              <div class="form-group">
+                <label for="product_id" class="form-label">Produit:</label>
+                <select v-model="product_id" @change="updateUnit" required class="input-text" id="product_id">
+                  <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">
+                    {{ product.PRODUCT_NAME }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dosage_amount" class="form-label">Quantité:</label>
+                <input v-model="dosage_amount" required class="input-text" id="dosage_amount">
+                <span v-if="unit" class="unit-label">{{ unit }}</span> <!-- Afficher l'unité de mesure -->
+              </div>
+              <div class="form-group">
+                <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
+                <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
+              </div>
+              <div class="form-group" v-if="!useCurrentDate">
+                <label for="dosage_date" class="form-label">Date du dosage:</label>
+                <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date">
+              </div>
+              <div class="form-group">
+                <button type="submit" class="full-width-button">Enregistrer</button>
+              </div>
+            </form>
+          </section>
 
-        <section v-if="showDosingForm" class="section">
-          <h3>Ajouter un dosage</h3>
-          <form @submit.prevent="addDosing" class="form-container">
-            <div class="form-group">
-              <label for="product_id" class="form-label">Produit:</label>
-              <select v-model="product_id" required class="input-text" id="product_id">
-                <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">{{ product.PRODUCT_NAME }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="dosage_amount" class="form-label">Quantité:</label>
-              <input v-model="dosage_amount" required class="input-text" id="dosage_amount">
-            </div>
-            <div class="form-group">
-              <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
-              <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
-            </div>
-            <div class="form-group" v-if="!useCurrentDate">
-              <label for="dosage_date" class="form-label">Date du dosage:</label>
-              <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date">
-            </div>
-            <button type="submit" class="add-button">Ajouter</button>
-          </form>
-        </section>
         <ul>
           <li v-for="dosing in recentDosings" :key="dosing.DOSING_ID" class="table-row">
             <span class="table-cell">{{ dosing.PRODUCT_NAME }}</span>
@@ -134,6 +148,7 @@ export default {
 	  product_id: '',
       dosage_amount: '',
       dosage_date: '',
+	  unit: '',
       products: [],
       useCurrentDate: true,
       showDosingForm: false,
@@ -161,8 +176,7 @@ export default {
     this.setCurrentDateTime();
   },
   methods: {
-  
-  async fetchProducts() {
+    async fetchProducts() {
       try {
         const response = await fetch('http://localhost:5000/products');
         const data = await response.json();
@@ -171,6 +185,17 @@ export default {
         console.error('Error fetching products:', error);
       }
     },
+    
+    // Nouvelle méthode pour mettre à jour l'unité de mesure
+    updateUnit() {
+      const selectedProduct = this.products.find(product => product.PRODUCT_ID === this.product_id);
+      if (selectedProduct) {
+        this.unit = selectedProduct.UNIT; // Assurez-vous que le champ d'unité existe dans votre réponse de produit
+      } else {
+        this.unit = ''; // Réinitialiser si aucun produit n'est sélectionné
+      }
+    },
+    
     async addDosing() {
       let formattedDate = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('.')[0];
       if (!this.useCurrentDate) {
@@ -465,4 +490,68 @@ ul li::before {
   list-style-type: none;
   text-align: left;
 }
+
+.button-container {
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  margin-top: 1em; /* Ajouter un espace au-dessus des boutons */
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column; /* Dispose les éléments en colonne */
+  align-items: center; /* Centre les éléments horizontalement */
+  margin-top: 1em; /* Ajouter un espacement au-dessus du formulaire */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column; /* Dispose les labels et champs en colonne */
+  margin: 0.5em 0; /* Ajouter un espacement vertical entre les lignes */
+  width: 100%; /* S'assurer que les champs utilisent toute la largeur disponible */
+  max-width: 400px; /* Limite la largeur maximale des champs */
+}
+
+.form-label {
+  margin-bottom: 0.2em; /* Espace entre le label et le champ */
+}
+
+.submit-button, .add-button {
+  align-self: center; /* Centre les boutons */
+}
+
+.full-width-button {
+  display: block; /* Affiche le bouton en bloc pour occuper toute la largeur */
+  width: 100%; /* Assure que le bouton prend toute la largeur disponible */
+  background-color: black; /* Couleur de fond par défaut */
+  color: white; /* Couleur du texte */
+  border: none; /* Supprime la bordure par défaut */
+  padding: 1em; /* Espacement intérieur du bouton */
+  font-size: 1.2em; /* Taille de la police */
+  cursor: pointer; /* Change le curseur au survol */
+  transition: background-color 0.3s; /* Transition douce pour la couleur de fond */
+}
+
+.full-width-button:hover {
+  background-color: #1E90FF; /* Couleur de fond au survol */
+}
+
+.add-button {
+  display: block; /* S'assure que le bouton prend toute la largeur */
+  width: 100%; /* Prend 100% de la largeur du conteneur */
+  background-color: black; /* Couleur de fond noire */
+  color: white; /* Couleur du texte blanche */
+  border: none; /* Supprime la bordure */
+  padding: 15px; /* Ajoute de l'espace intérieur */
+  text-align: center; /* Centre le texte */
+  font-size: 16px; /* Ajuste la taille de la police */
+  transition: background-color 0.3s; /* Ajoute une transition pour le changement de couleur */
+}
+
+.add-button:hover {
+  background-color: #3498db; /* Couleur de fond bleu au survol */
+}
+
+
+
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <h2>Ajouter un dosage</h2>
-    <form @submit.prevent="addDosing" class="form-container">
+    <h2>Ajouter un changement d'eau</h2>
+    <form @submit.prevent="addWaterChange" class="form-container">
       <div class="form-group">
         <label for="aquarium_id" class="form-label">Aquarium:</label>
         <select v-model="aquarium_id" required class="input-text" id="aquarium_id">
@@ -9,23 +9,20 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="product_id" class="form-label">Produit:</label>
-        <select v-model="product_id" @change="updateSelectedUnit" required class="input-text" id="product_id">
-          <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">{{ product.PRODUCT_NAME }}</option>
-        </select>
+        <label for="quantity_out" class="form-label">Quantité d'eau retirée:</label>
+        <input v-model="quantity_out" type="number" step="0.01" min="0" required class="input-text" id="quantity_out">
       </div>
       <div class="form-group">
-        <label for="dosage_amount" class="form-label">Quantité:</label>
-        <input v-model="dosage_amount" required class="input-text" id="dosage_amount" />
-        <span class="unit-display">{{ selectedUnit }}</span>
+        <label for="quantity_in" class="form-label">Quantité d'eau ajoutée:</label>
+        <input v-model="quantity_in" type="number" step="0.01" min="0" class="input-text" id="quantity_in">
       </div>
       <div class="form-group">
         <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
-        <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate" />
+        <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
       </div>
       <div class="form-group" v-if="!useCurrentDate">
-        <label for="dosage_date" class="form-label">Dosage Date:</label>
-        <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date" />
+        <label for="dateWaterChange" class="form-label">Date de changement d'eau:</label>
+        <input v-model="dateWaterChange" type="datetime-local" required class="input-text" id="dateWaterChange">
       </div>
       <button type="submit" class="add-button">Ajouter</button>
     </form>
@@ -37,18 +34,15 @@ export default {
   data() {
     return {
       aquarium_id: '',
-      product_id: '',
-      dosage_amount: '',
-      dosage_date: '',
+      quantity_out: '',
+      quantity_in: '',
+      dateWaterChange: '',
       aquariums: [],
-      products: [],
-      useCurrentDate: true,
-      selectedUnit: ''
+      useCurrentDate: true
     };
   },
   async created() {
     await this.fetchAquariums();
-    await this.fetchProducts();
     this.setCurrentDateTime(); // Initialise la date et l'heure actuelles
   },
   methods: {
@@ -61,38 +55,24 @@ export default {
         console.error('Error fetching aquariums:', error);
       }
     },
-    async fetchProducts() {
-  try {
-    const response = await fetch('http://localhost:5000/products');
-    const data = await response.json();
-    this.products = data; // Assurez-vous que la réponse contient bien des produits avec ITEM_NAME
-  } catch (error) {
-    console.error('Error fetching products:', error);
-  }
-}
-,
     setCurrentDateTime() {
       const now = new Date();
-      const tzOffset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+      const tzOffset = now.getTimezoneOffset() * 60000;
       const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
-      this.dosage_date = localISOTime;
+      this.dateWaterChange = localISOTime;
     },
-    updateSelectedUnit() {
-      const selectedProduct = this.products.find(product => product.PRODUCT_ID === this.product_id);
-      this.selectedUnit = selectedProduct ? selectedProduct.UNIT : '';
-    },
-    async addDosing() {
+    async addWaterChange() {
       let formattedDate = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('.')[0];
       if (!this.useCurrentDate) {
-        formattedDate = new Date(this.dosage_date).toISOString().split('.')[0];
+        formattedDate = new Date(this.dateWaterChange).toISOString().split('.')[0];
       }
       const payload = {
         aquarium_id: this.aquarium_id,
-        product_id: this.product_id,
-        dosage_amount: this.dosage_amount,
-        dosage_date: formattedDate
+        quantity_out: this.quantity_out,
+        quantity_in: this.quantity_in,
+        dateWaterChange: formattedDate
       };
-      const response = await fetch('http://localhost:5000/add_dosing', {
+      const response = await fetch('http://localhost:5000/add_waterchange', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -100,11 +80,7 @@ export default {
         body: JSON.stringify(payload)
       });
       const result = await response.json();
-      if (response.ok) {
-        alert('Dosage ajouté avec succès!');
-      } else {
-        alert(`Erreur: ${result.message}`);
-      }
+      alert(result.message);
     }
   },
   watch: {
@@ -112,9 +88,6 @@ export default {
       if (newValue) {
         this.setCurrentDateTime();
       }
-    },
-    product_id(newValue) {
-      this.updateSelectedUnit(); // Appel à la mise à jour de l'unité sélectionnée
     }
   }
 };
@@ -129,12 +102,6 @@ export default {
   flex-direction: column;
 }
 
-.unit-display {
-  margin-left: 10px;
-  font-weight: bold;
-  color: #FFFFFF;
-}
-
 .form-container {
   display: flex;
   flex-direction: column;
@@ -146,6 +113,7 @@ export default {
 .form-group {
   display: flex;
   align-items: center;
+  width: 400px;
   margin: auto;
   justify-content: space-between;
 }
@@ -156,10 +124,10 @@ label {
   text-align: left;
 }
 
-.input-text, select {
+.input-text, textarea, select {
   flex: 2;
   padding: 1em;
-  font-size: 1em !important;
+  font-size: 1em;
   background-color: #FFFFFF;
   color: #000000;
   border: 1px solid #E0E0E0;
@@ -177,6 +145,7 @@ h2 {
   color: #FFFFFF;
   border: none;
   padding: 0.75em 1.5em;
+  font-family: 'Consolas', 'Courier New', monospace;
   cursor: pointer;
   align-self: center;
 }

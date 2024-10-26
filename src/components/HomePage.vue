@@ -6,6 +6,7 @@
         <ul>
           <li><router-link to="/waterparameters" class="button">Water Parameters</router-link></li>
           <li><router-link to="/dosing" class="button">Dosing</router-link></li>
+          <li><router-link to="/waterchange" class="button">Water Change</router-link></li> <!-- Ajout ici -->
           <li><router-link to="/items" class="button">Admin Items</router-link></li>
         </ul>
       </nav>
@@ -19,12 +20,17 @@
       </section>
     </div>
   </div>
-
 </template>
 
+
 <script>
+import WaterChangeView from './WaterChangeView.vue'; // Importer le composant
+
 export default {
   name: 'HomePage',
+  components: {
+    WaterChangeView // Enregistrement du composant
+  },
   data() {
     return {
       aquariums: []
