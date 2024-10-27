@@ -1,11 +1,6 @@
 <template>
   <section class="section">
-    <!-- Lien pour revenir à la HomePage -->
-    <router-link to="/" class="nav-link">Retour à la page d'accueil</router-link>
-    <!-- Lien pour revenir à l'Aquarium -->
-    <router-link :to="{ name: 'AquariumView', params: { aquarium_id: localAquariumId } }" class="nav-link">
-      Retour à l'aquarium
-    </router-link>
+
 
     <!-- Section pour les Daily Water Parameters -->
     <h3>Daily Water Parameters</h3>
@@ -21,9 +16,13 @@
     </ul>
     <p v-else class="no-data">*** Aucune donnée saisie selon les critères sélectionnés.</p>
 
-    <!-- Nouvelle section pour la console AI -->
+    <!-- Section pour la console AI avec choix de type de question -->
     <h3>Console d'Analyse</h3>
     <div class="query-console">
+      <select v-model="questionType" class="query-type-select">
+        <option value="general">Questions générales</option>
+        <option value="data">Questions sur les données</option>
+      </select>
       <textarea
         v-model="query"
         placeholder="Posez une question sur votre aquarium..."
@@ -54,8 +53,9 @@ export default {
       filteredWaterParameters: [],
       selectedDate: new Date().toISOString().split('T')[0],
       waterParameters: [],
-      query: '',           // Nouveau champ pour la question
-      queryResult: null    // Nouveau champ pour afficher le résultat
+      query: '',           
+      queryResult: null,
+      questionType: 'general'  // Type de question sélectionné
     };
   },
   created() {
@@ -88,29 +88,52 @@ export default {
       );
     },
     async sendQuery() {
-      console.log("Query:", this.query);
-      console.log("Aquarium ID:", this.localAquariumId);
+    try {
+      const endpoint = this.questionType === 'data'
+        ? 'http://localhost:5000/api/full_aquarium_data'
+        : 'http://localhost:5000/api/query';
+        
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: this.query, aquarium_id: this.localAquariumId })
+      });
+      
+      let result = await response.json();
+      let answer = result.data || result.error;
 
-      try {
-        const response = await fetch('http://localhost:5000/api/query', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ query: this.query, aquarium_id: this.localAquariumId })
-        });
-        const result = await response.json();
-        this.queryResult = result.data || result.error;  // Affiche le message d'erreur s'il existe
-      } catch (error) {
-        console.error("Erreur lors de l'envoi de la requête AI:", error);
-        this.queryResult = "Une erreur est survenue lors de la requête.";
+      // Vérification de termes indiquant un accès aux données
+      if (
+        this.questionType === 'general' &&
+        /access data|retrieve|calculate|average|data points|specific values/.test(answer.toLowerCase())
+      ) {
+        answer += "\n\nPour répondre aux questions sur les données, veuillez sélectionner 'Questions sur les données' pour accéder directement aux informations de la base de données.";
       }
+      this.queryResult = answer;
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de la requête:", error);
+      this.queryResult = "Une erreur est survenue lors de la requête.";
     }
+  }
   }
 };
 </script>
 
 <style scoped>
+/* Styles ajoutés pour le choix de type de question */
+.query-type-select {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 0.5em;
+  background-color: #333;
+  color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+
 .section {
   padding: 20px;
   color: #fff;

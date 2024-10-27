@@ -36,13 +36,7 @@
       <li v-if="hasMoreThan10Results" class="more-data">...</li>
     </ul>
 
-    <!-- Bouton pour accéder aux détails quotidiens des paramètres d'eau -->
-    <div class="button-container">
-      <router-link :to="{ name: 'AquariumDetails', params: { aquarium_id: aquariumId } }" class="full-width-button">
-  Aquarium Details
-</router-link>
 
-    </div>
   </section>
 </template>
 
