@@ -17,6 +17,13 @@
         <h2>Dosings</h2>
         <AquariumDosings :aquariumId="aquariumId" />
       </div>
+	  
+	  <!-- Intégration de la section Water Changes -->
+      <div class="section">
+        <h2>Water Changes</h2>
+        <AquariumWaterChanges :aquariumId="aquariumId" />
+      </div>
+	  
     </div>
   </div>
 </template>
@@ -25,12 +32,14 @@
 <script>
 import AquariumWaterParameters from './AquariumWaterParameters.vue';
 import AquariumDosings from './AquariumDosings.vue';
+import AquariumWaterChanges from './AquariumWaterChanges.vue';
 
 export default {
   name: 'AquariumView',
   components: {
     AquariumWaterParameters,
-    AquariumDosings
+    AquariumDosings,
+	AquariumWaterChanges
   },
   data() {
     return {

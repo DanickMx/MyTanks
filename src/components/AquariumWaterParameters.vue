@@ -1,29 +1,32 @@
 <template>
-  <!-- Section pour les derniers paramètres d'eau -->
   <section class="section">
+    <!-- Section pour les derniers paramètres d'eau -->
     <div class="parameter-tiles">
       <div v-for="measurement in latestMeasurements" :key="measurement.PARAMETER_ID" class="parameter-tile">
         <p>{{ measurement.PARAMETER_NAME }} {{ measurement.MESURE }}</p>
         <small class="parameter-date">{{ measurement.DATEMESURE }}</small>
       </div>
     </div>
+
+    <!-- Bouton pour ajouter un paramètre d'eau -->
     <div class="button-container">
       <button @click="toggleForm" class="full-width-button">
         <i class="fas fa-plus"></i> Add Parameter
       </button>
     </div>
 
-    <!-- Utilisation de <transition> pour les animations -->
-<transition name="slide-fade">
+    <!-- Transition pour le formulaire d'ajout de paramètre d'eau -->
+    <transition name="slide-fade">
       <section v-if="showAddWaterParameterForm" class="add-water-parameter-section">
-        <AddWaterParameter 
-          @close="showAddWaterParameterForm = false" 
+        <AddWaterParameter
+          @close="showAddWaterParameterForm = false"
           :aquariumId="aquariumId"
           @parameterAdded="fetchWaterParameters"
         />
       </section>
     </transition>
 
+    <!-- Liste des paramètres d'eau récents -->
     <ul>
       <li v-for="parameter in recentWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
         <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
@@ -32,26 +35,16 @@
       </li>
       <li v-if="hasMoreThan10Results" class="more-data">...</li>
     </ul>
-  </section>
 
-  <!-- Section pour les paramètres d'eau pour une journée -->
-  <section class="section">
-    <h3>Daily Water Parameters</h3>
-    <div class="date-picker-container">
-      <input type="date" v-model="selectedDate" @change="filterWaterParameters" class="date-picker" />
+    <!-- Bouton pour accéder aux détails quotidiens des paramètres d'eau -->
+    <div class="button-container">
+      <router-link :to="{ name: 'AquariumDetails', params: { aquarium_id: aquariumId } }" class="full-width-button">
+  Aquarium Details
+</router-link>
+
     </div>
-    <ul v-if="filteredWaterParameters.length">
-      <li v-for="parameter in filteredWaterParameters" :key="parameter.WATERPARAMETER_ID" class="table-row">
-        <span class="table-cell">{{ parameter.PARAMETER_NAME }}</span>
-        <span class="table-cell">{{ parameter.MESURE }}</span>
-        <span class="table-cell">{{ parameter.DATEMESURE }}</span>
-      </li>
-    </ul>
-    <p v-else class="no-data">*** Aucune données saisies selon les critères sélectionnés.</p>
   </section>
 </template>
-
-
 
 <script>
 import AddWaterParameter from '@/components/AddWaterParameter.vue';
@@ -64,67 +57,30 @@ export default {
   data() {
     return {
       waterParameters: [],
-      parameters: [],
-      filteredWaterParameters: [],
       recentWaterParameters: [],
       latestMeasurements: [],
-      useCurrentDate: true,
-      aquariumId: this.$route.params.aquarium_id,
-      form: {
-        parameters_id: '',
-        mesure: '',
-        dateMesure: '',
-        aquarium_id: this.$route.params.aquarium_id
-      },
-      selectedDate: new Date().toISOString().split('T')[0],
       hasMoreThan10Results: false,
       showAddWaterParameterForm: false,
+      aquariumId: this.$route.params.aquarium_id,
     };
   },
   created() {
-    this.fetchAquariumDetails();
     this.fetchWaterParameters();
-    this.fetchParameters();
-    this.setCurrentDateTime();
   },
   methods: {
     toggleForm() {
       this.showAddWaterParameterForm = !this.showAddWaterParameterForm;
-    },
-    async fetchAquariumDetails() {
-      try {
-        const response = await fetch(`http://localhost:5000/aquarium/${this.aquariumId}`);
-        const data = await response.json();
-        this.aquariumName = data.AQUARIUM_NAME;
-      } catch (error) {
-        console.error('Error fetching aquarium details:', error);
-      }
     },
     async fetchWaterParameters() {
       try {
         const response = await fetch(`http://localhost:5000/waterparameters/${this.aquariumId}`);
         const data = await response.json();
         this.waterParameters = data;
-        this.filterWaterParameters();
         this.getRecentWaterParameters();
         this.getLatestMeasurements();
       } catch (error) {
         console.error('Error fetching water parameters:', error);
       }
-    },
-    async fetchParameters() {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/parameters');
-        const data = await response.json();
-        this.parameters = data;
-      } catch (error) {
-        console.error('Error fetching parameters:', error);
-      }
-    },
-    filterWaterParameters() {
-      this.filteredWaterParameters = this.waterParameters.filter(param =>
-        param.DATEMESURE.startsWith(this.selectedDate)
-      );
     },
     getRecentWaterParameters() {
       this.recentWaterParameters = this.waterParameters
@@ -141,41 +97,10 @@ export default {
       });
       this.latestMeasurements = Array.from(latestMap.values());
     },
-    setCurrentDateTime() {
-      const now = new Date();
-      const localDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-      this.form.dateMesure = localDateTime;
-    },
-    async submitForm() {
-      try {
-        let formattedDate = new Date().toISOString().split('.')[0];
-        if (!this.useCurrentDate) {
-          formattedDate = new Date(this.form.dateMesure).toISOString().split('.')[0];
-        }
-        const payload = {
-          parameters_id: this.form.parameters_id,
-          mesure: this.form.mesure,
-          dateMesure: formattedDate,
-          aquarium_id: this.form.aquarium_id
-        };
-        const response = await fetch('http://localhost:5000/add_water_parameter', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-        const result = await response.json();
-        alert(result.message);
-        this.showAddWaterParameterForm = false;
-        this.fetchWaterParameters();
-      } catch (error) {
-        console.error('Error adding water parameter:', error);
-      }
-    },
   }
 };
 </script>
+
 
 <style scoped>
 /* Styles pour la transition */
@@ -236,7 +161,7 @@ export default {
 
 
 .parameter-tiles, .dosage-tiles {
-  display: grid;
+
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px;
 }

@@ -1,7 +1,7 @@
 <template>
   <section>
     <form @submit.prevent="submitForm" class="form-container">
-<!-- Aquarium selection shown only if aquariumId is not provided -->
+      <!-- Aquarium selection shown only if aquariumId is not provided -->
       <div class="form-group" v-if="!aquariumId">
         <label for="aquarium_id" class="form-label">Aquarium:</label>
         <select v-model="form.aquarium_id" class="input-text" id="aquarium_id" required>
@@ -31,7 +31,7 @@
         <input v-model="form.dateMesure" type="datetime-local" required class="input-text" id="dateMesure" />
       </div>
       <div class="form-group">
-        <button type="submit" class="full-width-button">Enregistrer</button>
+        <button type="submit" class="full-width-button">Save</button>
       </div>
     </form>
   </section>
@@ -85,14 +85,20 @@ export default {
     },
     setCurrentDateTime() {
       const now = new Date();
-      const localDateTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-      this.form.dateMesure = localDateTime;
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      this.form.dateMesure = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
     },
     async submitForm() {
       try {
-        let formattedDate = this.useCurrentDate
-          ? new Date().toISOString().split('.')[0]
-          : new Date(this.form.dateMesure).toISOString().split('.')[0];
+        let formattedDate;
+
+        if (this.useCurrentDate) {
+          const now = new Date();
+          formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+        } else {
+          const selectedDate = new Date(this.form.dateMesure);
+          formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")} ${String(selectedDate.getHours()).padStart(2, "0")}:${String(selectedDate.getMinutes()).padStart(2, "0")}:${String(selectedDate.getSeconds()).padStart(2, "0")}`;
+        }
 
         const payload = {
           parameter_id: this.form.parameter_id,
@@ -115,15 +121,18 @@ export default {
 
         alert("Water parameter added successfully!");
 
-        this.$emit('parameterAdded'); // Émet un événement pour signaler l'ajout
-        this.closeForm(); // Ferme le formulaire
+        this.$emit('parameterAdded');
+        this.resetForm();
       } catch (error) {
         console.error('Error adding water parameter:', error);
         alert("Une erreur est survenue lors de l'ajout du paramètre d'eau. Veuillez réessayer.");
       }
     },
-    closeForm() {
-      this.$emit('close');
+    resetForm() {
+      this.form.parameter_id = '';
+      this.form.mesure = '';
+      this.setCurrentDateTime();
+      this.useCurrentDate = true;
     }
   },
   watch: {

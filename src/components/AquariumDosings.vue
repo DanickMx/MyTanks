@@ -1,6 +1,6 @@
 <template>
   <div class="dosings-container">
-    <div class="parameter-tiles"> <!-- Utiliser la même classe ici -->
+    <div class="parameter-tiles">
       <div v-for="dosing in latestDosages" :key="dosing.PRODUCT_NAME" class="parameter-tile">
         <p>{{ dosing.PRODUCT_NAME }} {{ dosing.DOSAGE_AMOUNT }}</p>
         <small class="parameter-date">{{ dosing.DOSAGE_DATE }}</small>
@@ -12,32 +12,7 @@
       </button>
     </div>
     <section v-if="showDosingForm" class="section">
-      <form @submit.prevent="addDosing" class="form-container">
-        <div class="form-group">
-          <label for="product_id" class="form-label">Produit:</label>
-          <select v-model="product_id" @change="updateUnit" required class="input-text" id="product_id">
-            <option v-for="product in products" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID">
-              {{ product.PRODUCT_NAME }}
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="dosage_amount" class="form-label">Quantité:</label>
-          <input v-model="dosage_amount" required class="input-text" id="dosage_amount">
-          <span v-if="unit" class="unit-label">{{ unit }}</span>
-        </div>
-        <div class="form-group">
-          <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
-          <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate">
-        </div>
-        <div class="form-group" v-if="!useCurrentDate">
-          <label for="dosage_date" class="form-label">Date du dosage:</label>
-          <input v-model="dosage_date" type="datetime-local" required class="input-text" id="dosage_date">
-        </div>
-        <div class="form-group">
-          <button type="submit" class="full-width-button">Enregistrer</button>
-        </div>
-      </form>
+      <AddDosing :aquariumId="aquariumId" @dosingAdded="fetchDosings" />
     </section>
 
     <ul>
@@ -50,72 +25,26 @@
   </div>
 </template>
 
-
 <script>
+import AddDosing from './AddDosing.vue'; // Assurez-vous que le chemin est correct
+
 export default {
   name: 'AquariumDosings',
+  components: {
+    AddDosing
+  },
   data() {
     return {
       recentDosings: [],
       latestDosages: [],
-      product_id: '',
-      dosage_amount: '',
-      dosage_date: '',
-      unit: '',
-      products: [],
-      useCurrentDate: true,
       showDosingForm: false,
       aquariumId: this.$route.params.aquarium_id,
     };
   },
   created() {
-    this.fetchProducts();
     this.fetchDosings();
   },
   methods: {
-    async fetchProducts() {
-      try {
-        const response = await fetch('http://localhost:5000/products');
-        const data = await response.json();
-        this.products = data;
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    },
-    
-    updateUnit() {
-      const selectedProduct = this.products.find(product => product.PRODUCT_ID === this.product_id);
-      this.unit = selectedProduct ? selectedProduct.UNIT : '';
-    },
-    
-    async addDosing() {
-      let formattedDate = new Date().toISOString().split('.')[0];
-      if (!this.useCurrentDate) {
-        formattedDate = new Date(this.dosage_date).toISOString().split('.')[0];
-      }
-      const payload = {
-        aquarium_id: this.aquariumId,
-        product_id: this.product_id,
-        dosage_amount: this.dosage_amount,
-        dosage_date: formattedDate
-      };
-      try {
-        const response = await fetch('http://localhost:5000/add_dosing', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        alert(result.message);
-        this.showDosingForm = false;
-        this.fetchDosings(); // Rafraîchir les dosages
-      } catch (error) {
-        console.error('Error adding dosing:', error);
-      }
-    },
-    
     async fetchDosings() {
       try {
         const response = await fetch(`http://localhost:5000/dosings/${this.aquariumId}`);

@@ -1,7 +1,7 @@
 <template>
   <div class="water-change-view">
     <router-link to="/" class="home-link">Retour à la page d'accueil</router-link>
-    <AddWaterChange :aquariums="aquariums" />
+    <AddWaterChange :aquariums="aquariums" @waterchange-added="handleWaterChangeAdded" />
   </div>
 </template>
 
@@ -28,35 +28,21 @@ export default {
         console.error('Error fetching aquariums:', error);
       }
     },
+    handleWaterChangeAdded() {
+      // Action que vous souhaitez réaliser après l’ajout
+      this.fetchAquariums(); // Rafraîchit la liste des aquariums après l'ajout
+    }
   },
 };
 </script>
 
 <style scoped>
-.water-change-view {
-  padding: 20px;
-  background-color: #222;
-  color: #fff;
-}
-form {
+.container {
+  background-color: #000000; /* Arrière-plan noir pour toute la page */
+  color: #E0E0E0;
+  padding: 1em;
   display: flex;
   flex-direction: column;
 }
-label {
-  margin-top: 10px;
-}
-input, select {
-  margin-top: 5px;
-}
-button {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #1E90FF;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #0b7dda;
-}
+
 </style>
