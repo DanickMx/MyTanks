@@ -17,26 +17,53 @@
         <input v-model="quantity_in" type="number" step="0.01" min="0" required class="input-text" id="quantity_in" />
       </div>
 
-      <!-- Option "même quantité" et Quantité d'eau retirée -->
-      <div class="form-group">
-        <label for="sameQuantity" class="form-label">Même quantité:</label>
-        <input type="checkbox" v-model="sameQuantity" id="sameQuantity" />
+      <!-- Case à cocher pour "même quantité" et Quantité d'eau retirée -->
+      <div class="form-group checkbox-group">
+        <label class="form-checkbox">
+          <input type="checkbox" v-model="sameQuantity" />
+          Même quantité
+        </label>
       </div>
       <div class="form-group">
         <label for="quantity_out" class="form-label">Quantité d'eau retirée:</label>
         <input v-model="quantity_out" type="number" step="0.01" min="0" :disabled="sameQuantity" class="input-text" id="quantity_out" />
       </div>
 
-      <!-- Option pour la date actuelle -->
-      <div class="form-group">
-        <label for="useCurrentDate" class="form-label">Date et heure actuelle:</label>
-        <input type="checkbox" v-model="useCurrentDate" checked id="useCurrentDate" />
+      <!-- Case à cocher pour "Date et heure actuelle" -->
+      <div class="form-group checkbox-group">
+        <label class="form-checkbox">
+          <input type="checkbox" v-model="useCurrentDate" />
+          Date et heure actuelle
+        </label>
       </div>
 
       <!-- Champ pour la date personnalisée (visible uniquement si useCurrentDate est désactivé) -->
       <div class="form-group" v-if="!useCurrentDate">
         <label for="dateWaterChange" class="form-label">Date de changement d'eau:</label>
         <input v-model="dateWaterChange" type="datetime-local" required class="input-text" id="dateWaterChange" />
+      </div>
+      
+      <!-- Case à cocher pour afficher/masquer l'ajout de paramètres d'eau -->
+      <div class="form-group checkbox-group">
+        <label class="form-checkbox">
+          <input type="checkbox" v-model="showWaterParameterForm" />
+          Add Water Parameter
+        </label>
+      </div>
+
+      <!-- Formulaire pour ajouter des paramètres d'eau (visible uniquement si showWaterParameterForm est activé) -->
+      <div v-if="showWaterParameterForm" class="form-group">
+        <label class="form-label">Ajouter des paramètres d'eau:</label>
+        <div v-for="(parameter, index) in waterParameters" :key="index" class="parameter-item">
+          <select v-model="parameter.parameter_id" required class="input-text">
+            <option v-for="param in availableParameters" :key="param.PARAMETER_ID" :value="param.PARAMETER_ID">
+              {{ param.PARAMETER_NAME }}
+            </option>
+          </select>
+          <input v-model="parameter.mesure" type="number" step="0.01" required class="input-text" placeholder="Mesure" />
+          <button type="button" @click="removeWaterParameter(index)">Supprimer</button>
+        </div>
+        <button type="button" @click="addWaterParameter">Ajouter un paramètre d'eau</button>
       </div>
 
       <!-- Bouton d'ajout -->
@@ -63,12 +90,16 @@ export default {
       dateWaterChange: '',
       aquariums: [],
       useCurrentDate: true,
-      sameQuantity: true // Case à cocher "même quantité", activée par défaut
+      sameQuantity: true,
+      availableParameters: [],
+      waterParameters: [{ parameter_id: '', mesure: '' }],
+      showWaterParameterForm: false // Contrôle l'affichage du formulaire pour ajouter un paramètre d'eau
     };
   },
-  async created() {
-    await this.fetchAquariums();
-    this.setCurrentDateTime(); // Initialisation de la date actuelle
+  created() {
+    this.fetchAquariums();
+    this.fetchAvailableParameters();
+    this.setCurrentDateTime();
   },
   methods: {
     async fetchAquariums() {
@@ -80,20 +111,35 @@ export default {
         console.error('Erreur lors de la récupération des aquariums:', error);
       }
     },
+    async fetchAvailableParameters() {
+      try {
+        const response = await fetch('http://localhost:5000/parameters');
+        const data = await response.json();
+        this.availableParameters = data;
+      } catch (error) {
+        console.error("Erreur lors de la récupération des paramètres d'eau:", error);
+      }
+    },
     setCurrentDateTime() {
       const now = new Date();
       const tzOffset = now.getTimezoneOffset() * 60000;
       this.dateWaterChange = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
     },
+    addWaterParameter() {
+      this.waterParameters.push({ parameter_id: '', mesure: '' });
+    },
+    removeWaterParameter(index) {
+      this.waterParameters.splice(index, 1);
+    },
     async addWaterChange() {
       let formattedDate;
-
       if (this.useCurrentDate) {
-        // Date actuelle en UTC avec secondes
         const now = new Date();
-        formattedDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19).replace('T', ' ');
+        formattedDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' ');
       } else {
-        // Ajuste `dateWaterChange` pour UTC avec fuseau horaire
         const selectedDate = new Date(this.dateWaterChange);
         formattedDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000)
           .toISOString()
@@ -105,7 +151,8 @@ export default {
         aquarium_id: this.aquarium_id,
         quantity_in: this.quantity_in,
         quantity_out: this.quantity_out,
-        date_waterchange: formattedDate // Date avec secondes en UTC
+        date_waterchange: formattedDate,
+        water_parameters: this.showWaterParameterForm ? this.waterParameters : []
       };
 
       try {
@@ -132,8 +179,10 @@ export default {
       this.quantity_in = '';
       this.quantity_out = '';
       this.sameQuantity = true;
-      this.setCurrentDateTime(); // Remet la date à l'heure actuelle
+      this.waterParameters = [{ parameter_id: '', mesure: '' }];
+      this.setCurrentDateTime();
       this.useCurrentDate = true;
+      this.showWaterParameterForm = false; // Réinitialise l'état de la case à cocher
     }
   },
   watch: {
@@ -143,13 +192,11 @@ export default {
       }
     },
     quantity_in(newValue) {
-      // Si la case "même quantité" est cochée, synchronise quantity_out avec quantity_in
       if (this.sameQuantity) {
         this.quantity_out = newValue;
       }
     },
     sameQuantity(newValue) {
-      // Si "même quantité" est cochée, copie quantity_in dans quantity_out
       if (newValue) {
         this.quantity_out = this.quantity_in;
       }
@@ -157,8 +204,6 @@ export default {
   }
 };
 </script>
-
-
 
 <style scoped>
 /* Structure du formulaire */
@@ -192,6 +237,16 @@ export default {
   color: white;
   border: 1px solid #FFFFFF;
   border-radius: 2px;
+}
+
+/* Style des cases à cocher alignées à gauche */
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  color: #FFFFFF;
+}
+.form-checkbox input[type="checkbox"] {
+  margin-right: 0.5em;
 }
 
 /* Style du bouton */

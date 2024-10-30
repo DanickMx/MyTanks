@@ -35,8 +35,6 @@
       </li>
       <li v-if="hasMoreThan10Results" class="more-data">...</li>
     </ul>
-
-
   </section>
 </template>
 
